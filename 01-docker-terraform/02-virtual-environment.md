@@ -128,13 +128,35 @@ This adds pandas to your `pyproject.toml` and installs it in the virtual environ
 Now we can execute the file:
 
 ```bash
-uv run python pipeline/pipeline.py 10
+uv run python pipeline.py 10
 ```
 
 We will see:
 
 * `['pipeline.py', '10']`
 * `job finished successfully for day = 10`
+
+## Note on multiple .venv in working directory
+
+### uv searches upward
+- uv uses the nearest `pyproject.toml` / `.python-version` in parent dirs.
+- `uv init` inside an existing project adds the child as a **workspace member**, sharing the parent's single `uv.lock`.
+
+### Standalone project in a subfolder
+```bash
+uv init --no-workspace
+uv python pin 3.12
+uv lock
+```
+
+### `VIRTUAL_ENV ... will be ignored` warning 
+- Parent venv still activated in the shell. Harmless; uv uses the project's `.venv`.
+- Fix: `deactivate`, delete the old parent `.venv`.
+
+### Rules of thumb
+- `uv run` needs no activation.
+- Scripts-only project? Add `[tool.uv] package = false` to stop reinstalling the project on each run.
+ 
 
 ## Git Configuration
 
