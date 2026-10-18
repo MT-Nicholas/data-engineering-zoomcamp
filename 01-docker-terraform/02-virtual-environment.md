@@ -59,6 +59,24 @@ But this installs it globally on your system. This can cause conflicts if differ
 
 Instead, we want to use a **virtual environment** - an isolated Python environment that keeps dependencies for this project separate from other projects and from your system Python.
 
+## Virtual Environemnt vs. Docker Container 
+The Fundamental Difference:
+- Virtual Environment (.venv): Isolate Python packages only within your local operating system.
+- Container (Docker / Podman): Isolate entire operating system user spaces (including the OS runtime, system libraries, binaries, system dependencies, and code).
+
+How They Work Together:
+In production workflows, developers routinely use both together. Inside a Dockerfile, you might create a Python virtual environment to cleanly manage dependency paths before running your application inside the Linux container.
+
+## Using venv - Classic Python Package Manager
+
+```bash
+# Initialize .venv 
+python3 -m venv .venv
+
+# Activate .venv
+source .venv/bin/activate
+```
+
 ## Using uv - Modern Python Package Manager
 
 We'll use `uv` - a modern, fast Python package and project manager written in Rust. It's much faster than pip and handles virtual environments automatically.
@@ -95,7 +113,9 @@ Now let's add pandas:
 uv add pandas pyarrow
 ```
 
-This adds pandas to your `pyproject.toml` and installs it in the virtual environment.
+This adds pandas to your `pyproject.toml` and installs it in the virtual environment. This is preferable to typing it manually in to the .toml file, because any dependencies will be automatically considered as well.
+
+*Note: Sometimes, in VS code, we might have to manually select the python interpeter that lives inside the .venv dir.* 
 
 ### Running the Pipeline
 

@@ -1,6 +1,7 @@
 ---
 next_url: 02-virtual-environment.md
 ---
+
 # Introduction to Docker
 
 Docker is a _containerization software_ that allows us to isolate software in a similar way to virtual machines but in a much leaner way.
@@ -23,31 +24,39 @@ They are used in many situations:
 - Spark: Analytics engine for large-scale data processing
 - Serverless: AWS Lambda, Google Functions
 
+Optionally, we may use Podman, which is an open-source equivalent.
+
 ## Basic Docker Commands
 
 Check Docker version:
 
 ```bash
 docker --version
+podman --version
 ```
 
 Run a simple container:
 
 ```bash
 docker run hello-world
+podman run hello-world
 ```
 
 Run something more complex:
 
 ```bash
 docker run ubuntu
+podman run
 ```
 
-Nothing happens. Need to run it in `-it` mode:
+Nothing happens. Need to run it in `-it` (iterative) mode:
 
 ```bash
 docker run -it ubuntu
+podman run -it ubuntu
 ```
+
+To exit the session, type exit and enter.
 
 We don't have `python` there so let's install it:
 
@@ -58,12 +67,12 @@ python3 -V
 
 ## Stateless Containers
 
-Important: Docker containers are stateless - any changes done inside a container will NOT be saved when the container is killed and started again.
+Important: Docker containers are stateless - any changes done inside a container will NOT be saved when the container is killed and started again. We can pause the container and restart it later (this will preserve state), but every time we run a container from the same image, it starts from the same base state.
 
 When you exit the container and use it again, the changes are gone:
 
 ```bash
-docker run -it ubuntu
+docker run -it ubuntu # or podman, for all commands
 python3 -V
 ```
 
@@ -90,7 +99,7 @@ We can restart one of them, but we won't do it, because it's not a good practice
 docker rm $(docker ps -aq)
 ```
 
-Next time we run something, we add `--rm`:
+Next time we run something, we add `--rm`: (to delete automatically on exit)
 
 ```bash
 docker run -it --rm ubuntu
@@ -98,11 +107,11 @@ docker run -it --rm ubuntu
 
 ## Different Base Images
 
-There are other base images besides `hello-world` and `ubuntu`. For example, Python:
+There are other base images besides `hello-world` and `ubuntu`. For example, for Python see below. Note the naming convention: `<name>:<label>`
 
 ```bash
 docker run -it --rm python:3.9.16
-# add -slim to get a smaller version
+# add -slim to get a smaller version of python
 ```
 
 This one starts `python`. If we want bash, we need to overwrite `entrypoint`:
@@ -112,14 +121,16 @@ docker run -it \
     --rm \
     --entrypoint=bash \
     python:3.9.16-slim
+
+ls .
+python3 --version
 ```
 
 ## Volumes
 
 So, we know that with docker we can restore any container to its initial state in a reproducible manner. But what about data? A common way to do so is with _volumes_.
 
-The durable relationship is that host files can be shared with a container
-through a mounted volume:
+The durable relationship is that host files (on local machine) can be shared with a container (the isolated component) through a mounted volume (one-way sharing):
 
 ![Local host files can be shared with a Docker container through a mounted volume.](images/docker-volume-mapping.png)
 
@@ -128,8 +139,8 @@ Let's create some data in `test`:
 ```bash
 mkdir test
 cd test
-touch file1.txt file2.txt file3.txt
-echo "Hello from host" > file1.txt
+touch file1.txt file2.txt file3.txt # Create files
+echo "Hello from host" > file1.txt # Type text into one of the files
 cd ..
 ```
 
@@ -154,7 +165,9 @@ for filepath in current_dir.iterdir():
         print(f"    Content: {content}")
 ```
 
-Now let's map this to a Python container:
+Now let's map this to a Python container.
+
+The `-v` denotes the volumes. It requires a mapping of `local_dir:container_dir`. Below we are mapping `test` from current working directory to `app/test` in our docker image's directory
 
 ```bash
 docker run -it \
