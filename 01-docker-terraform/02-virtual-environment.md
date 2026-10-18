@@ -38,6 +38,7 @@ Now let's add pandas:
 
 ```python
 import pandas as pd
+import sys
 
 df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
 print(df.head())
@@ -60,11 +61,12 @@ But this installs it globally on your system. This can cause conflicts if differ
 Instead, we want to use a **virtual environment** - an isolated Python environment that keeps dependencies for this project separate from other projects and from your system Python.
 
 ## Virtual Environemnt vs. Docker Container 
-The Fundamental Difference:
+
+### The Fundamental Difference:
 - Virtual Environment (.venv): Isolate Python packages only within your local operating system.
 - Container (Docker / Podman): Isolate entire operating system user spaces (including the OS runtime, system libraries, binaries, system dependencies, and code).
 
-How They Work Together:
+### How They Work Together:
 In production workflows, developers routinely use both together. Inside a Dockerfile, you might create a Python virtual environment to cleanly manage dependency paths before running your application inside the Linux container.
 
 ## Using venv - Classic Python Package Manager
@@ -85,6 +87,8 @@ We'll use `uv` - a modern, fast Python package and project manager written in Ru
 pip install uv
 ```
 
+On MacOS, it seems it was already installed.
+
 Now initialize a Python project with uv:
 
 ```bash
@@ -96,14 +100,16 @@ This creates a `pyproject.toml` file for managing dependencies and a `.python-ve
 ### Comparing Python Versions
 
 ```bash
-uv run which python  # Python in the virtual environment
-uv run python -V
+uv run which python3    # uv Python : directory
+uv run python -V        # uv Python : version
 
-which python        # System Python
-python -V
+which python3           # System Python : directory
+python3 -V              # System Python : version
 ```
 
 You'll see they're different - `uv run` uses the isolated environment.
+
+You will also now see that a `.venv` file has been created.
 
 ### Adding Dependencies
 
@@ -122,7 +128,7 @@ This adds pandas to your `pyproject.toml` and installs it in the virtual environ
 Now we can execute the file:
 
 ```bash
-uv run python pipeline.py 10
+uv run python pipeline/pipeline.py 10
 ```
 
 We will see:
