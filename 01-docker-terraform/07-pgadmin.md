@@ -8,6 +8,8 @@ next_url: 08-dockerizing-ingestion.md
 
 It's possible to run pgAdmin as a container along with the Postgres container, but both containers will have to be in the same _virtual network_ so that they can find each other.
 
+*Note: We could also install pgadmin as a desktop app on macos using brew.*
+
 
 ## Run pgAdmin Container
 

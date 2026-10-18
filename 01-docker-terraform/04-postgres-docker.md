@@ -8,10 +8,11 @@ Now we want to do real data engineering. Let's use a Postgres database for that.
 
 You can run a containerized version of Postgres that doesn't require any installation steps. You only need to provide a few _environment variables_ to it as well as a _volume_ for storing data.
 
+*Note: Assuming we are still in `pipeline` as our working dir*
 
 ## Running PostgreSQL in a Container
 
-Create a folder anywhere you'd like for Postgres to store data in. We will use the example folder `ny_taxi_postgres_data`. Here's how to run the container:
+Here's how to run the container:
 
 ```bash
 docker run -it --rm \
@@ -27,15 +28,15 @@ docker run -it --rm \
 
 * `-e` sets environment variables (user, password, database name)
 * `-v ny_taxi_postgres_data:/var/lib/postgresql` creates a **named volume**
-  * Docker manages this volume automatically
-  * Data persists even after container is removed
+  * Docker manages this volume automatically (and seperately from the container)
+  * Data persists even after container is removed because the volume is its own entity (VERY IMPORTANT !)
   * Volume is stored in Docker's internal storage
 * `-p 5432:5432` maps port 5432 from container to host
 * `postgres:18` uses PostgreSQL version 18 (latest as of Dec 2025)
 
 ### Alternative Approach - Bind Mount
 
-First create the directory, then map it:
+First create the directory in a physical location in your current dir, then map it:
 
 ```bash
 mkdir ny_taxi_postgres_data
@@ -51,8 +52,22 @@ docker run -it \
 
 ### Named Volume vs Bind Mount
 
-* **Named volume** (`name:/path`): Managed by Docker, easier
-* **Bind mount** (`/host/path:/container/path`): Direct mapping to host filesystem, more control
+* **Named volume** (`name:/path`): Managed by Docker, easier (abstracted away, not accessible, less control) [Default Choice]
+* **Bind mount** (`/host/path:/container/path`): Direct mapping to filesystem on host (physically accessible, more control to see/edit files directly, but easier to accidentally mess up)
+
+- How to tell apart?
+  - Bare name = Named Volume
+  - Path starting with `/` or `./` = Bind Mount
+
+### `--rm` and volumes
+- `--rm` removes the container, **not** named volumes. Data survives and reattaches next run.
+- `--rm` **does** delete anonymous (unnamed) volumes (i.e. if the -v argument did not specify a name (Named Volume) or path (Bind Mount), the volume would be deleted with the container
+
+```bash
+podman volume ls
+podman volume inspect ny_taxi_postgres_data
+podman volume rm ny_taxi_postgres_data
+```
 
 ## Connecting to PostgreSQL
 
@@ -62,9 +77,10 @@ Install pgcli:
 
 ```bash
 uv add --dev pgcli
+uv add --dev pgcli "psycopg[binary]"
 ```
 
-The `--dev` flag marks this as a development dependency (not needed in production). It will be added to the `[dependency-groups]` section of `pyproject.toml` instead of the main `dependencies` section.
+The `--dev` flag marks this as a development dependency (not needed in production). It will be added to the `[dependency-groups]` section of `pyproject.toml` instead of the main `dependencies` section. This way, when we productionize into a docker container, these set of requirements would not be considered. Because we only need these requirements as part of development; for production we do no need, so we can skip, to keep production lightweight.
 
 Now use it to connect to Postgres:
 
